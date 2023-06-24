@@ -3,6 +3,8 @@
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
 using namespace std;
+const float scaleStep = 0.05f;
+const float moveForwardStep = 0.05f;
 /* Initialize OpenGL Graphics */
 void initGL() {
     // Set "clearing" or background color
@@ -14,6 +16,7 @@ void initGL() {
 GLfloat eyex = 2, eyey = 2, eyez = 2;
 GLfloat centerx = 0, centery = 0, centerz = 0;
 GLfloat upx = 0, upy = 1, upz = 0;
+
 bool isAxes = true, isCube = false, isPyramid = false;
 bool isOctahedron = false;
 /* Draw axes: X in Red, Y in Green and Z in Blue */
@@ -24,25 +27,7 @@ double triangleScale = 100;
 double cylinderHeight = 100;
 double cylinderRadius = 0;
 
-void drawAxes() {
-    glLineWidth(3);
-    glBegin(GL_LINES);
-    glColor3f(1, 0, 0);   // Red
-    // X axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(1, 0, 0);
 
-    glColor3f(0, 1, 0);   // Green
-    // Y axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 1, 0);
-
-    glColor3f(0, 0, 1);   // Blue
-    // Z axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 1);
-    glEnd();
-}
 
 /* Draw a cube centered at the origin */
 void drawCube() {
@@ -114,13 +99,46 @@ std::vector<float> buildUnitPositiveX(int subdivision)
 
 void drawSphere() {
 
-    float vertices[] = { 1 - scale , 0 , 0 };
+    float vertices[] = { 1 - scale , 0 , 0,
+       0, 1 - scale, 0,
+       0, 0, 1 - scale,
+         -1 + scale, 0, 0,
+            0, -1 + scale, 0,
+            0, 0, -1 + scale
+    };
+    
     float radius = (1.0f * scale) / sqrt(3);
     //radius = radius * 2.0f;
-    int subdivision = 10;
-    for (int i = 0; i < 1; ++i) {
+    int subdivision = 5;
+    for (int i = 0; i < 6; ++i) {
         glPushMatrix();
-        glTranslatef(vertices[0], vertices[1], vertices[2]);
+        glTranslatef(vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
+        glColor3f(1, 1, 0);
+        if (i == 1) {
+            // set the color to red
+            glColor3f(1, 0, 0);
+            glRotatef(90, 0, 0, 1);
+        }
+        if (i == 2) {
+            // set the color to white
+            glColor3f(1, 1, 1);
+            glRotatef(-90, 0, 1, 0);
+        }
+        if (i == 3) {
+            // set the color to blue
+            glColor3f(0, 0, 1);
+            glRotatef(180, 0, 1, 0);
+        }
+        if (i == 4) {
+            // set the color to cyan
+            glColor3f(0, 1, 1);
+            glRotatef(-90, 0, 0, 1);
+        }
+        if (i == 5) {
+            // set the color to magenta
+            glColor3f(1, 0, 1);
+            glRotatef(90, 0, 1, 0);
+        }
         vector<float> vertices = buildUnitPositiveX(subdivision);
         
         for (int i = 0; i < vertices.size(); i++) {
@@ -134,7 +152,7 @@ void drawSphere() {
             {
                 // vertex 1
                 // yellow color
-                glColor3f(1, 1, 0);
+               
                 glNormal3f(vertices[3 * (i * pointsPerRow + j) + 0],
                     vertices[3 * (i * pointsPerRow + j) + 1],
                     vertices[3 * (i * pointsPerRow + j) + 2]);
@@ -248,7 +266,7 @@ void drawCylinder() {
             curry = radius * sin(theta);
 
             GLfloat c = (2 + cos(theta)) / 3;
-            glColor3f(c, c, c);
+            glColor3f(c,c,c);
             glVertex3f(currx, curry, height / 2);
             glVertex3f(currx, curry, -height / 2);
 
@@ -312,10 +330,7 @@ void drawOctahedron() {
 
 
 
-/* Draw a pyramid centered at the origin */
-void drawPyramid() {
-   
-}
+
 
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
@@ -334,10 +349,8 @@ void display() {
         upx, upy, upz);
     // draw
 
-    if (isAxes) drawAxes();
-    if (isCube) drawCube();
-    if (isPyramid) drawPyramid();
-    if (isOctahedron) drawOctahedron();
+    
+    drawOctahedron();
     drawCylinder();
     drawSphere();
 
@@ -372,7 +385,11 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
 
 /* Callback handler for normal-key event */
 void keyboardListener(unsigned char key, int x, int y) {
-    float v = 0.1;
+    //float v = 0.1;
+    double v = 0.25;
+    double lx = centerx - eyex;
+    double lz = centerz - eyez;
+    double s;
     switch (key) {
         // Control eye (location of the eye)
         // control eyex
@@ -422,7 +439,18 @@ void keyboardListener(unsigned char key, int x, int y) {
 
         // Control what is shown
     case 'a':
-        isAxes = !isAxes;   // show/hide Axes if 'a' is pressed
+        eyex += v * (-upy * lz);
+        eyez += v * (lx * upy);
+        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
+        eyex /= s;
+        eyez /= s;
+        break;
+    case 'd':
+        eyex -= v * (-upy * lz);
+        eyez -= v * (lx * upy);
+        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
+        eyex /= s;
+        eyez /= s;
         break;
     case 'c':
         isCube = !isCube;   // show/hide Cube if 'c' is pressed
@@ -440,7 +468,9 @@ void keyboardListener(unsigned char key, int x, int y) {
         cylinderRadius++;
         radius += 0.015f;
         xheight -= 0.022f;
-        scale += 0.1f;
+        scale += scaleStep;
+        if (scale > 1.0f)
+            scale = 1.0f;
         break;
     case '.':
         triangleScale++;
@@ -448,7 +478,9 @@ void keyboardListener(unsigned char key, int x, int y) {
         cylinderRadius--;
         radius -= 0.015f;
         xheight += 0.022f;
-        scale -= 0.1f;
+        scale -= scaleStep;
+        if (scale < 0.0f)
+            scale = 0.0f;
         break;
         // Control exit
     case 27:    // ESC key
@@ -467,6 +499,22 @@ void specialKeyListener(int key, int x, int y) {
     double lx = centerx - eyex;
     double lz = centerz - eyez;
     double s;
+
+    GLfloat speed = 0.1; // Adjust this value to control the speed of movement
+
+    // Calculate the forward vector
+    GLfloat forwardx = centerx - eyex;
+    GLfloat forwardy = centery - eyey;
+    GLfloat forwardz = centerz - eyez;
+
+    // Normalize the forward vector
+    GLfloat magnitude = sqrt(forwardx * forwardx + forwardy * forwardy + forwardz * forwardz);
+    forwardx /= magnitude;
+    forwardy /= magnitude;
+    forwardz /= magnitude;
+
+    // Update the eye and center positions
+    
     switch (key) {
     case GLUT_KEY_LEFT:
         eyex += v * (upy * lz);
@@ -481,13 +529,28 @@ void specialKeyListener(int key, int x, int y) {
         s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
         eyex /= s;
         eyez /= s;
-        break;
+        break;\
     case GLUT_KEY_UP:
-        eyey += v;
+        // move forward
+        eyex += forwardx * speed;
+        eyey += forwardy * speed;
+        eyez += forwardz * speed;
+        centerx += forwardx * speed;
+        centery += forwardy * speed;
+        centerz += forwardz * speed;
         break;
     case GLUT_KEY_DOWN:
-        eyey -= v;
+        eyex += moveForwardStep;
+        eyey += moveForwardStep;
+        eyez += moveForwardStep;
         break;
+    
+        // case GLUT_KEY_UP:
+    //     eyey += v;
+    //     break;
+    // case GLUT_KEY_DOWN:
+    //     eyey -= v;
+    //     break;
 
     default:
         return;
