@@ -345,7 +345,7 @@ void display() {
     glMatrixMode(GL_MODELVIEW);             // To operate on Model-View matrix
     glLoadIdentity();                       // Reset the model-view matrix
 
-   
+    
     
 
     // control viewing (or camera)
@@ -355,10 +355,13 @@ void display() {
     // draw
     //drawSphere(5,100,100);
     //drawCone(10, 5, 10);
+    glPushMatrix();
+    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
     drawOctahedron();
     drawAxes();
     drawCylinder();
     drawSphere();
+    glPopMatrix();
     glutSwapBuffers();  // Render now
 }
 
@@ -537,14 +540,14 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         break;
     case 'a':
         //rotate the camera clockwise
-        rotationAngle += 0.1f;
-        clockWise();
-
+        rotationAngle += 10;
+        //clockWise();
+       
 
         break;
     case 'd':
-        rotationAngle -= 0.1f;
-        counterClockwise();
+        rotationAngle -= 10;
+        //counterClockwise();
         break;
     case '7':
 
