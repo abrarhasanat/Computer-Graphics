@@ -5,7 +5,7 @@
 #define pi acos(-1.0)
 int hour, minute, second;
 
-float theta = 1.0f; // Angle of the pendulum
+float theta = 0.5f; // Angle of the pendulum
 float length = 0.4f; // Length of the pendulum arm
 float gravity = 0.098f; // Acceleration due to gravity
 
@@ -118,7 +118,7 @@ void drawClock() {
 
 
 
-float ts = 0;
+float ts = 0.05f;
 float A = 0.1;
 float y = -length;
 void drawPendulum() {

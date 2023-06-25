@@ -1,10 +1,17 @@
+#define _USE_MATH_DEFINES
+
 // for MS Windows
-#include<bits/stdc++.h>
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
+#include<bits/stdc++.h>
 #include <cmath>
+
+
 using namespace std;
-const float scaleStep = 0.05f;
-const float moveForwardStep = 0.05f;
+
+struct point {
+    GLfloat x, y, z;
+};
+
 /* Initialize OpenGL Graphics */
 void initGL() {
     // Set "clearing" or background color
@@ -13,29 +20,74 @@ void initGL() {
 }
 
 // Global variables
-GLfloat eyex = 2, eyey = 2, eyez = 2;
-GLfloat centerx = 0, centery = 0, centerz = 0;
-GLfloat upx = 0, upy = 1, upz = 0;
+struct point pos;   // position of the eye
+struct point l;     // look/forward direction
+struct point r;     // right direction
+struct point u;     // up direction
 
-bool isAxes = true, isCube = false, isPyramid = false;
-bool isOctahedron = false;
 /* Draw axes: X in Red, Y in Green and Z in Blue */
+void drawAxes() {
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glColor3f(1, 0, 0);   // Red
+    // X axis
+    glVertex3f(0, 0, 0);
+    glVertex3f(1, 0, 0);
 
+    glColor3f(0, 1, 0);   // Green
+    // Y axis
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 1, 0);
 
-
-double triangleScale = 100;
-double cylinderHeight = 100;
-double cylinderRadius = 0;
-
-
-
-/* Draw a cube centered at the origin */
-void drawCube() {
+    glColor3f(0, 0, 1);   // Blue
+    // Z axis
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 1);
+    glEnd();
 }
 
-double xheight = 1.0f;
-double radius = 0.01f;
 float scale = 0;
+float scaleStep = 0.05f;
+void drawOctahedron() {
+
+    // Define the vertices of a triangle
+    GLfloat vertices[] = {
+        (1.0f * scale) / 3 , 1 - (2.0f * scale) / 3, (1.0f * scale) / 3 ,     // Top vertex
+        1 - (2.0f * scale) / 3 ,(1.0f * scale) / 3  ,(1.0f * scale) / 3 ,    // Bottom left vertex
+        (1.0f * scale) / 3, (1.0f * scale) / 3,  1 - (2.0f * scale) / 3    // Bottom right vertex
+    };
+
+
+    // Apply rotations and translations to create the octahedron
+
+        // Draw the triangle
+    for (int i = 1; i <= 8; ++i) {
+        glPushMatrix();
+        int j = max(i, i - 4);
+        glRotatef((j - 1) * 90, 0.0f, 1.0f, 0.0f);  // Rotate 90 degrees around the Y-axis 
+        if (i > 4) {
+            // mirror it on xy plane
+            glRotatef(180, 1.0f, 0.0f, 0.0f);
+
+        }
+        glBegin(GL_TRIANGLES);
+        glColor3f(1.0f, 0.0f, 0.0f);  // Red
+        glVertex3fv(vertices);  // Top vertex
+        glColor3f(0.0f, 1.0f, 0.0f);  // Green
+        glVertex3fv(vertices + 3);  // Bottom left vertex
+        glColor3f(0.0f, 0.0f, 1.0f);  // Blue
+        glVertex3fv(vertices + 6);  // Bottom right vertex
+        glEnd();
+
+        // glRotatef(i * 90.0f, 0.0f, 1.0f, 0.0f);  // Rotate 90 degrees around the Y-axis
+
+        glPopMatrix();
+
+    }
+
+
+}
+
 
 
 
@@ -185,8 +237,8 @@ void drawCylinder() {
     float newposx = (vertices[0] + vertices[3]) / 2;
     float newposy = (vertices[1] + vertices[4]) / 2;
     float newposz = (vertices[2] + vertices[5]) / 2;
-    xheight = vertices[1] - vertices[0];
-    radius = vertices[0] * sqrt(3);
+    float xheight = vertices[1] - vertices[0];
+    float radius = vertices[0] * sqrt(3);
     float height = sqrt(2) * xheight;
     int segments = 50;
     double tempx = radius, tempy = 0;
@@ -280,104 +332,39 @@ void drawCylinder() {
         glPopMatrix();
     }
 }
-struct point {
-    GLfloat x, y, z;
-};
 
 
-
-
-void drawOctahedron() {
-
-    // Define the vertices of a triangle
-    GLfloat vertices[] = {
-        (1.0f * scale) / 3 , 1 - (2.0f * scale) / 3, (1.0f * scale) / 3 ,     // Top vertex
-        1 - (2.0f * scale) / 3 ,(1.0f * scale) / 3  ,(1.0f * scale) / 3 ,    // Bottom left vertex
-        (1.0f * scale) / 3, (1.0f * scale) / 3,  1 - (2.0f * scale) / 3    // Bottom right vertex
-    };
-
-
-    // Apply rotations and translations to create the octahedron
-
-        // Draw the triangle
-    for (int i = 1; i <= 8; ++i) {
-        glPushMatrix();
-        int j = max(i, i - 4);
-        glRotatef((j - 1) * 90, 0.0f, 1.0f, 0.0f);  // Rotate 90 degrees around the Y-axis 
-        if (i > 4) {
-            // mirror it on xy plane
-            glRotatef(180, 1.0f, 0.0f, 0.0f);
-
-        }
-        glBegin(GL_TRIANGLES);
-        glColor3f(1.0f, 0.0f, 0.0f);  // Red
-        glVertex3fv(vertices);  // Top vertex
-        glColor3f(0.0f, 1.0f, 0.0f);  // Green
-        glVertex3fv(vertices + 3);  // Bottom left vertex
-        glColor3f(0.0f, 0.0f, 1.0f);  // Blue
-        glVertex3fv(vertices + 6);  // Bottom right vertex
-        glEnd();
-
-        // glRotatef(i * 90.0f, 0.0f, 1.0f, 0.0f);  // Rotate 90 degrees around the Y-axis
-
-        glPopMatrix();
-
-    }
-
-
-}
-
-
-
-
-
-void drawAxes() {
-    glLineWidth(3);
-    glBegin(GL_LINES);
-    glColor3f(1, 0, 0);   // Red
-    // X axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(1, 0, 0);
-
-    glColor3f(0, 1, 0);   // Green
-    // Y axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 1, 0);
-
-    glColor3f(0, 0, 1);   // Blue
-    // Z axis
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 1);
-    glEnd();
-}
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
+GLfloat x = 0, y = 0, z = 0;
+GLfloat rotationAngle = 0.0f;
+GLfloat rotationRadius = 0.01f;
 void display() {
     // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);             // To operate on Model-View matrix
     glLoadIdentity();                       // Reset the model-view matrix
 
-    // default arguments of gluLookAt
-    // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
+   
+    
 
     // control viewing (or camera)
-    gluLookAt(eyex, eyey, eyez,
-        centerx, centery, centerz,
-        upx, upy, upz);
+    gluLookAt(pos.x, pos.y, pos.z,
+        pos.x + l.x, pos.y + l.y, pos.z + l.z,
+        u.x, u.y, u.z);
     // draw
-
-    drawAxes();
+    //drawSphere(5,100,100);
+    //drawCone(10, 5, 10);
     drawOctahedron();
+    drawAxes();
     drawCylinder();
     drawSphere();
-
     glutSwapBuffers();  // Render now
 }
 
 /* Handler for window re-size event. Called back when the window first appears and
    whenever the window is re-sized with its new width and height */
-void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
+void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
     // Compute aspect ratio of the new window
     if (height == 0) height = 1;                // To prevent divide by 0
     GLfloat aspect = (GLfloat)width / (GLfloat)height;
@@ -387,9 +374,7 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
 
     // Set the aspect ratio of the clipping area to match the viewport
     glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
-    glLoadIdentity();
-
-    // Reset the projection matrix
+    glLoadIdentity();             // Reset the projection matrix
     /*if (width >= height) {
         // aspect >= 1, set the height from -1 to 1, with larger width
         gluOrtho2D(-1.0 * aspect, 1.0 * aspect, -1.0, 1.0);
@@ -401,206 +386,260 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
     gluPerspective(45.0f, aspect, 0.1f, 100.0f);
 }
 
-/* Callback handler for normal-key event */
-void keyboardListener(unsigned char key, int x, int y) {
-    //float v = 0.1;
-    double v = 0.25;
-    double lx = centerx - eyex;
-    double lz = centerz - eyez;
-    double s;
+
+void clockWise() {
+
+    rotationAngle = 10.0f;
+    GLfloat rotationAngleRad = rotationAngle * (M_PI / 180.0);
+
+    // Calculate the distance between the camera position and the origin
+    GLfloat distanceToOrigin = sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+
+    // Rotate the camera position around the origin
+    GLfloat newX = cos(rotationAngleRad) * pos.x + sin(rotationAngleRad) * pos.z;
+    GLfloat newZ = -sin(rotationAngleRad) * pos.x + cos(rotationAngleRad) * pos.z;
+    pos.x = newX;
+    pos.z = newZ;
+
+    // Recalculate the camera's forward direction
+    l.x = -pos.x / distanceToOrigin;
+    l.y = -pos.y / distanceToOrigin;
+    l.z = -pos.z / distanceToOrigin;
+
+    // Recalculate the camera's up direction
+    // u.x = l.y * r.z - l.z * r.y;
+    // u.y = l.z * r.x - l.x * r.z;
+    // u.z = l.x * r.y - l.y * r.x;
+
+    // // Recalculate the camera's right direction
+    // r.x = u.y * l.z - u.z * l.y;
+    // r.y = u.z * l.x - u.x * l.z;
+    // r.z = u.x * l.y - u.y * l.x;
+
+    // // Normalize the right direction vector
+    // GLfloat rLength = sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
+    // r.x /= rLength;
+    // r.y /= rLength;
+    // r.z /= rLength;
+
+    // r.x = 0.7;
+    // r.y = 0;
+    // r.z = 0.7;
+
+    
+
+
+
+}
+
+
+void counterClockwise() {
+    rotationAngle = 10.0f;
+    GLfloat rotationAngleRad = rotationAngle * (M_PI / 180.0);
+
+    // Calculate the distance between the camera position and the origin
+    GLfloat distanceToOrigin = sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+
+    // Rotate the camera position around the origin
+    GLfloat newX = cos(rotationAngleRad) * pos.x - sin(rotationAngleRad) * pos.z;
+    GLfloat newZ = sin(rotationAngleRad) * pos.x + cos(rotationAngleRad) * pos.z;
+    pos.x = newX;
+    pos.z = newZ;
+    // Recalculate the camera's forward direction
+    l.x = -pos.x / distanceToOrigin;
+    l.y = -pos.y / distanceToOrigin;
+    l.z = -pos.z / distanceToOrigin;
+
+    // Recalculate the camera's up direction
+    // u.x = l.y * r.z - l.z * r.y;
+    // u.y = l.z * r.x - l.x * r.z;
+    // u.z = l.x * r.y - l.y * r.x;
+
+    // // Recalculate the camera's right direction
+    // r.x = u.y * l.z - u.z * l.y;
+    // r.y = u.z * l.x - u.x * l.z;
+    // r.z = u.x * l.y - u.y * l.x;
+
+    // // Normalize the right direction vector
+    // GLfloat rLength = sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
+    // r.x /= rLength;
+    // r.y /= rLength;
+    // r.z /= rLength;
+
+    // r.x = 0.7;
+    // r.y = 0;
+    // r.z = 0.7;
+
+
+}
+void keyboardListener(unsigned char key, int xx, int yy) {
+    double rate = 0.01;
     switch (key) {
-        // Control eye (location of the eye)
-        // control eyex
+
     case '1':
-        eyex += v;
+        r.x = r.x * cos(rate) + l.x * sin(rate);
+        r.y = r.y * cos(rate) + l.y * sin(rate);
+        r.z = r.z * cos(rate) + l.z * sin(rate);
+
+        l.x = l.x * cos(rate) - r.x * sin(rate);
+        l.y = l.y * cos(rate) - r.y * sin(rate);
+        l.z = l.z * cos(rate) - r.z * sin(rate);
         break;
+
     case '2':
-        eyex -= v;
+        r.x = r.x * cos(-rate) + l.x * sin(-rate);
+        r.y = r.y * cos(-rate) + l.y * sin(-rate);
+        r.z = r.z * cos(-rate) + l.z * sin(-rate);
+
+        l.x = l.x * cos(-rate) - r.x * sin(-rate);
+        l.y = l.y * cos(-rate) - r.y * sin(-rate);
+        l.z = l.z * cos(-rate) - r.z * sin(-rate);
         break;
-        // control eyey
+
     case '3':
-        eyey += v;
+        l.x = l.x * cos(rate) + u.x * sin(rate);
+        l.y = l.y * cos(rate) + u.y * sin(rate);
+        l.z = l.z * cos(rate) + u.z * sin(rate);
+
+        u.x = u.x * cos(rate) - l.x * sin(rate);
+        u.y = u.y * cos(rate) - l.y * sin(rate);
+        u.z = u.z * cos(rate) - l.z * sin(rate);
         break;
+
     case '4':
-        eyey -= v;
+        l.x = l.x * cos(-rate) + u.x * sin(-rate);
+        l.y = l.y * cos(-rate) + u.y * sin(-rate);
+        l.z = l.z * cos(-rate) + u.z * sin(-rate);
+
+        u.x = u.x * cos(-rate) - l.x * sin(-rate);
+        u.y = u.y * cos(-rate) - l.y * sin(-rate);
+        u.z = u.z * cos(-rate) - l.z * sin(-rate);
         break;
-        // control eyez
+
     case '5':
-        eyez += v;
+        u.x = u.x * cos(rate) + r.x * sin(rate);
+        u.y = u.y * cos(rate) + r.y * sin(rate);
+        u.z = u.z * cos(rate) + r.z * sin(rate);
+
+        r.x = r.x * cos(rate) - u.x * sin(rate);
+        r.y = r.y * cos(rate) - u.y * sin(rate);
+        r.z = r.z * cos(rate) - u.z * sin(rate);
         break;
+
     case '6':
-        eyez -= v;
-        break;
+        u.x = u.x * cos(-rate) + r.x * sin(-rate);
+        u.y = u.y * cos(-rate) + r.y * sin(-rate);
+        u.z = u.z * cos(-rate) + r.z * sin(-rate);
 
-        // Control center (location where the eye is looking at)
-        // control centerx
-    case 'q':
-        centerx += v;
+        r.x = r.x * cos(-rate) - u.x * sin(-rate);
+        r.y = r.y * cos(-rate) - u.y * sin(-rate);
+        r.z = r.z * cos(-rate) - u.z * sin(-rate);
         break;
-    case 'w':
-        centerx -= v;
-        break;
-        // control centery
-    case 'e':
-        centery += v;
-        break;
-    case 'r':
-        centery -= v;
-        break;
-        // control centerz
-    case 't':
-        centerz += v;
-        break;
-    case 'y':
-        centerz -= v;
-        break;
-
-        // Control what is shown
     case 'a':
-        eyex += v * (-upy * lz);
-        eyez += v * (lx * upy);
-        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
-        eyex /= s;
-        eyez /= s;
+        //rotate the camera clockwise
+        rotationAngle += 0.1f;
+        clockWise();
+
+
         break;
     case 'd':
-        eyex -= v * (-upy * lz);
-        eyez -= v * (lx * upy);
-        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
-        eyex /= s;
-        eyez /= s;
+        rotationAngle -= 0.1f;
+        counterClockwise();
         break;
-    case 'c':
-        isCube = !isCube;   // show/hide Cube if 'c' is pressed
+    case '7':
+
         break;
-    case 'p':
-        isPyramid = !isPyramid; // show/hide Pyramid if 'p' is pressed
-        break;
-    case 'o':
-        isOctahedron = !isOctahedron;   // show/hide Octahedron if 'o' is pressed
-        break;
-        // comma key 
     case ',':
-        triangleScale--;
-        cylinderHeight--;
-        cylinderRadius++;
-        radius += 0.015f;
-        xheight -= 0.022f;
         scale += scaleStep;
         if (scale > 1.0f)
             scale = 1.0f;
         break;
     case '.':
-        triangleScale++;
-        cylinderHeight++;
-        cylinderRadius--;
-        radius -= 0.015f;
-        xheight += 0.022f;
         scale -= scaleStep;
         if (scale < 0.0f)
             scale = 0.0f;
         break;
-        // Control exit
-    case 27:    // ESC key
-        exit(0);    // Exit window
-        break;
-        // rotate the cube around the y-axis if space is pressed 
-    }
-
-
-    glutPostRedisplay();    // Post a paint request to activate display()
-}
-
-/* Callback handler for special-key event */
-void specialKeyListener(int key, int x, int y) {
-    double v = 0.25;
-    double lx = centerx - eyex;
-    double lz = centerz - eyez;
-    double s;
-
-    GLfloat speed = 0.1; // Adjust this value to control the speed of movement
-
-    // Calculate the forward vector
-    GLfloat forwardx = centerx - eyex;
-    GLfloat forwardy = centery - eyey;
-    GLfloat forwardz = centerz - eyez;
-
-    // Normalize the forward vector
-    GLfloat magnitude = sqrt(forwardx * forwardx + forwardy * forwardy + forwardz * forwardz);
-    forwardx /= magnitude;
-    forwardy /= magnitude;
-    forwardz /= magnitude;
-
-
-
-
-    GLfloat rightx = upy * centerz - upz * centery;
-    GLfloat righty = upz * centerx - upx * centerz;
-    GLfloat rightz = upx * centery - upy * centerx;
-
-    
-    // Update the eye and center positions
-
-    switch (key) {
-    case GLUT_KEY_LEFT:
-        eyex += v * (-upy * lz);
-        eyez += v * (lx * upy);
-        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
-        eyex /= s;
-        eyez /= s;
-        
-        break;
-    case GLUT_KEY_RIGHT:
-        eyex += v * (-upy * lz);
-        eyez += v * (lx * upy);
-        s = sqrt(eyex * eyex + eyez * eyez) / (2 * sqrt(2));
-        eyex /= s;
-        eyez /= s;
-        break;\
-    case GLUT_KEY_UP:
-        // move forward
-        eyex += forwardx * speed;
-        eyey += forwardy * speed;
-        eyez += forwardz * speed;
-        centerx += forwardx * speed;
-        centery += forwardy * speed;
-        centerz += forwardz * speed;
-        break;
-    case GLUT_KEY_DOWN:
-        eyex -= forwardx * speed;
-        eyey -= forwardy * speed;
-        eyez -= forwardz * speed;
-        centerx -= forwardx * speed;
-        centery -= forwardy * speed;
-        centerz -= forwardz * speed;
-        
-        break;
-
-        // case GLUT_KEY_UP:
-    //     eyey += v;
-    //     break;
-    // case GLUT_KEY_DOWN:
-    //     eyey -= v;
-    //     break;
 
     default:
-        return;
+        break;
     }
-    glutPostRedisplay();    // Post a paint request to activate display()
+    glutPostRedisplay();
+}
+
+
+void specialKeyListener(int key, int x, int y)
+{
+    switch (key) {
+    case GLUT_KEY_UP:		//down arrow key
+        pos.x += l.x;
+        pos.y += l.y;
+        pos.z += l.z;
+        break;
+    case GLUT_KEY_DOWN:		// up arrow key
+        pos.x -= l.x;
+        pos.y -= l.y;
+        pos.z -= l.z;
+        break;
+
+    case GLUT_KEY_RIGHT:
+        pos.x += r.x;
+        pos.y += r.y;
+        pos.z += r.z;
+        break;
+    case GLUT_KEY_LEFT:
+        pos.x -= r.x;
+        pos.y -= r.y;
+        pos.z -= r.z;
+        break;
+
+    case GLUT_KEY_PAGE_UP:
+        pos.x += u.x;
+        pos.y += u.y;
+        pos.z += u.z;
+        break;
+    case GLUT_KEY_PAGE_DOWN:
+        pos.x -= u.x;
+        pos.y -= u.y;
+        pos.z -= u.z;
+        break;
+
+    case GLUT_KEY_INSERT:
+        break;
+
+    case GLUT_KEY_HOME:
+        break;
+    case GLUT_KEY_END:
+        pos.x = 3;pos.y = 3; pos.z = 3;
+        l.x = -1;l.y = -1;l.z = -1;
+        u.x = 0;u.y = 1;u.z = 0;
+        r.x = 0.3;r.y = 0;r.z = -0.3;
+
+    default:
+        break;
+    }
+    glutPostRedisplay();
 }
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
-    glutInit(&argc, argv);                      // Initialize GLUT
-    glutInitWindowSize(640, 640);               // Set the window's initial width & height
-    glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner
+    pos.x = 3;pos.y = 3; pos.z = 3;
+
+    l.x = -1;l.y = -1;l.z = -1;
+    u.x = 0;u.y = 1;u.z = 0;
+    r.x = 0.707;r.y = 0;r.z = -0.707;
+
+    glutInit(&argc, argv);                  // Initialize GLUT
+    glutInitWindowSize(640, 640);           // Set the window's initial width & height
+    glutInitWindowPosition(50, 50);         // Position the window's initial top-left corner
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
-    glutCreateWindow("OpenGL 3D Drawing");      // Create a window with the given title
-    glutDisplayFunc(display);                   // Register display callback handler for window re-paint
-    glutReshapeFunc(reshapeListener);           // Register callback handler for window re-shape
-    glutKeyboardFunc(keyboardListener);         // Register callback handler for normal-key event
-    glutSpecialFunc(specialKeyListener);        // Register callback handler for special-key event
-    initGL();                                   // Our own OpenGL initialization
-    glutMainLoop();                             // Enter the event-processing loop
+    glutCreateWindow("OpenGL 3D Drawing 2");          // Create a window with the given title
+    glutDisplayFunc(display);               // Register display callback handler for window re-paint
+    glutReshapeFunc(reshape);               // Register callback handler for window re-shape
+
+    glutKeyboardFunc(keyboardListener);
+    glutSpecialFunc(specialKeyListener);
+
+    initGL();                               // Our own OpenGL initialization
+    glutMainLoop();                         // Enter the event-processing loop
     return 0;
 }

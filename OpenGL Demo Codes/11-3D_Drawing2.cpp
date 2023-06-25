@@ -256,8 +256,8 @@ void display() {
               pos.x+l.x,pos.y+l.y,pos.z+l.z,
               u.x,u.y,u.z);
     // draw
-    drawSphere(5,100,100);
-
+    //drawSphere(5,100,100);
+    drawCone(10, 5, 10);
     glutSwapBuffers();  // Render now
 }
 
@@ -285,7 +285,45 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
     gluPerspective(45.0f, aspect, 0.1f, 100.0f);
 }
 
-void keyboardListener(unsigned char key, int xx,int yy){
+GLfloat rotationAngle = 0.0f;
+void temp() {
+   
+
+    GLfloat rotationAngleRad = rotationAngle * (M_PI / 180.0);
+
+    // Calculate the distance between the camera position and the origin
+    GLfloat distanceToOrigin = sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+
+    // Rotate the camera position around the origin
+    GLfloat newX = cos(rotationAngleRad) * pos.x + sin(rotationAngleRad) * pos.z;
+    GLfloat newZ = -sin(rotationAngleRad) * pos.x + cos(rotationAngleRad) * pos.z;
+    pos.x = newX;
+    pos.z = newZ;
+
+    // Recalculate the camera's forward direction
+    l.x = -pos.x / distanceToOrigin;
+    l.y = -pos.y / distanceToOrigin;
+    l.z = -pos.z / distanceToOrigin;
+
+    // Recalculate the camera's right direction
+    r.x = u.y * l.z - u.z * l.y;
+    r.y = u.z * l.x - u.x * l.z;
+    r.z = u.x * l.y - u.y * l.x;
+
+    // Normalize the right direction vector
+    GLfloat rLength = sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
+    r.x /= rLength;
+    r.y /= rLength;
+    r.z /= rLength;
+
+    // Recalculate the camera's up direction
+    u.x = l.y * r.z - l.z * r.y;
+    u.y = l.z * r.x - l.x * r.z;
+    u.z = l.x * r.y - l.y * r.x;
+
+
+}
+void keyboardListener(unsigned char key, int xx, int yy) {
     double rate = 0.01;
 	switch(key){
 
@@ -347,9 +385,11 @@ void keyboardListener(unsigned char key, int xx,int yy){
 			r.x = r.x*cos(-rate)-u.x*sin(-rate);
 			r.y = r.y*cos(-rate)-u.y*sin(-rate);
 			r.z = r.z*cos(-rate)-u.z*sin(-rate);
-			break;
-
-		default:
+            break;
+        case '7':
+        
+            break;
+        default:
 			break;
 	}
 	glutPostRedisplay();
