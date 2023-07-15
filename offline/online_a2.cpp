@@ -90,7 +90,8 @@ void drawOctahedron() {
 
 
 
-
+//collected from I forgot where 
+// that given link from moodle
 std::vector<float> buildUnitPositiveX(int subdivision)
 {
     const float DEG2RAD = acos(-1) / 180.0f;
@@ -149,8 +150,11 @@ std::vector<float> buildUnitPositiveX(int subdivision)
     return vertices;
 }
 
-void drawSphere() {
+double rotationScale = 0.0f;
 
+void drawSphere() {
+    float radius = (1.0f * scale) / sqrt(3);
+    
     float vertices[] = { 1 - scale , 0 , 0,
        0, 1 - scale, 0,
        0, 0, 1 - scale,
@@ -159,13 +163,20 @@ void drawSphere() {
             0, 0, -1 + scale
     };
 
-    float radius = (1.0f * scale) / sqrt(3);
+     radius = (1.0f * scale) / sqrt(3);
     //radius = radius * 2.0f;
-    int subdivision = 5;
-    for (int i = 0; i < 6; ++i) {
+     int subdivision = 5;
+     glTranslatef(0.0f, 0.0f, rotationScale * acos(-1) * radius / 180.0f);
+     for (int i = 0; i < 6; ++i) {
         glPushMatrix();
+        glRotatef(rotationScale, 1.0f, 0.0f, 0.0f);
+        
+        //glTranslatef(0.0f, 0.5f, 0.0f);
+        
         glTranslatef(vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
+        //glTranslatef(0.0f, 0.0f, -0.2 * rotationScale );
         glColor3f(1, 1, 0);
+        
         if (i == 1) {
             // set the color to red
             glColor3f(1, 0, 0);
@@ -227,6 +238,108 @@ void drawSphere() {
 
 }
 
+
+void drawSphere1(double radius, int stacks, int slices) {
+    glTranslatef(0.0f, 0.0f, rotationScale * acos(-1) * radius / 180.0f);
+    glPushMatrix();
+    glRotatef(rotationScale, 1.0f, 0.0f, 0.0f);
+    double rotationAngle = rotationScale * acos(-1) / 180;
+    
+    struct point points[stacks + 1][slices + 1];
+    for (int j = 0; j <= stacks; j++) {
+        double phi = -M_PI / 2.0 + j * M_PI / stacks;
+        double r = radius * cos(phi);
+        double h = radius * sin(phi);
+        for (int i = 0; i < slices + 1; i++) {
+            double theta = i * 2.0 * M_PI / slices;
+            points[j][i].x = r * cos(theta);
+            points[j][i].y = r * sin(theta);
+            points[j][i].z = h;
+        }
+    }
+
+    glBegin(GL_QUADS);
+    for (int j = 0; j < stacks; j++) {
+        for (int i = 0; i < slices; i++) {
+            GLfloat c = (2 + cos((i + j) * 2.0 * M_PI / slices)) / 3;
+            glColor3f(c, c, c);
+            glVertex3f(points[j][i].x, points[j][i].y, points[j][i].z);
+            glVertex3f(points[j][i + 1].x, points[j][i + 1].y, points[j][i + 1].z);
+
+            glVertex3f(points[j + 1][i + 1].x, points[j + 1][i + 1].y, points[j + 1][i + 1].z);
+            glVertex3f(points[j + 1][i].x, points[j + 1][i].y, points[j + 1][i].z);
+        }
+    }
+    glEnd();
+    glPopMatrix(); 
+}
+
+
+void drawSquare() {
+    float ff = 1.58f;
+    float vertices[] = { 1 - scale / ff  , 0 , 0,
+      0, 1 - scale / ff, 0,
+      0, 0, 1 - scale / ff,
+        -1 + scale/ff, 0, 0,
+           0, -1 + scale/ff, 0,
+           0, 0, -1 + scale/ff
+    };
+
+    float radius = (1.0f * scale) / sqrt(3);
+    //radius = radius * 2.0f;
+    int subdivision = 5;
+    for (int i = 0; i < 6; ++i) {
+        glPushMatrix();
+        glTranslatef(vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
+        glColor3f(1, 1, 0);
+        if (i == 0) {
+            glRotatef(90, 0, 0, 1);
+        }
+        if (i == 1) {
+            // set the color to red
+            glColor3f(1, 0, 0);
+            glRotatef(180, 0, 0, 1);
+            
+
+        }
+        if (i == 2) {
+            // set the color to white
+            glColor3f(1, 1, 1);
+            glRotatef(90, 1, 0, 0); 
+            
+        }
+        if (i == 3) {
+            // set the color to blue
+            glColor3f(0, 0, 1);
+            glRotatef(90, 0, 0, 1 );
+
+
+        }
+        if (i == 4) {
+            // set the color to cyan
+            glColor3f(0, 1, 1);
+            //glRotatef(-90, 0, 0, 1);
+        }
+        if (i == 5) {
+            // set the color to magenta
+            glColor3f(1, 0, 1);
+            // glRotatef(90, 0, 1, 0);
+            glRotatef(-90, 1, 0, 0);
+        }
+        // draw rectange keeping the center of the rectangle as the origin 
+        glBegin(GL_QUADS);
+        float factor = 0.37f;
+        glVertex3f(-scale * factor, 0, scale * factor) ;
+        glVertex3f(scale * factor, 0, scale * factor);
+        glVertex3f(scale * factor, 0, -scale * factor);
+        glVertex3f(-scale * factor, 0, -scale * factor);
+        glEnd();
+        glPopMatrix();
+    }
+
+
+    
+}
 void drawCylinder() {
 
     float vertices[] = {
@@ -332,7 +445,30 @@ void drawCylinder() {
         glPopMatrix();
     }
 }
+void drawGrid()
+{
+    glPushMatrix();
+    glColor3f(0.5f, 0.5f, 0.5f); // Set the grid color
+    glTranslatef(0, -0.5f, 0);   // Move the grid down a bit 
+    
+    // Draw the lines along the x-axis
+    for (float i = -1000; i <= 1000; i += 1) {
+        glBegin(GL_LINES);
+        glVertex3f(i, 0, -1000);
+        glVertex3f(i, 0, 1000);
+        glEnd();
+    }
 
+    // Draw the lines along the z-axis
+    for (float i = -1000; i <= 1000; i += 1) {
+        glBegin(GL_LINES);
+        glVertex3f(-1000, 0, i);
+        glVertex3f(1000, 0, i);
+        glEnd();
+    }
+
+    glPopMatrix();
+}
 
 /*  Handler for window-repaint event. Call back when the window first appears and
     whenever the window needs to be re-painted. */
@@ -345,8 +481,8 @@ void display() {
     glMatrixMode(GL_MODELVIEW);             // To operate on Model-View matrix
     glLoadIdentity();                       // Reset the model-view matrix
 
-    
-    
+
+
 
     // control viewing (or camera)
     gluLookAt(pos.x, pos.y, pos.z,
@@ -357,10 +493,13 @@ void display() {
     //drawCone(10, 5, 10);
     glPushMatrix();
     glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+     drawGrid();
     drawOctahedron();
     drawAxes();
     drawCylinder();
     drawSphere();
+    //drawSquare();
+    // drawSquare();
     glPopMatrix();
     glutSwapBuffers();  // Render now
 }
@@ -429,7 +568,7 @@ void clockWise() {
     // r.y = 0;
     // r.z = 0.7;
 
-    
+
 
 
 
@@ -542,7 +681,7 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         //rotate the camera clockwise
         rotationAngle += 10;
         //clockWise();
-       
+
 
         break;
     case 'd':
@@ -562,7 +701,12 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         if (scale < 0.0f)
             scale = 0.0f;
         break;
-    
+    case 'g':
+        rotationScale += 10;
+        break;
+    case 'h':
+        rotationScale -= 10;
+        break;
     default:
         break;
     }

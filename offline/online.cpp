@@ -61,7 +61,7 @@ void drawOctahedron() {
     // Apply rotations and translations to create the octahedron
 
         // Draw the triangle
-    for (int i = 1; i <= 8; ++i) {
+    for (int i = 1; i <= 4; ++i) {
         glPushMatrix();
         int j = max(i, i - 4);
         glRotatef((j - 1) * 90, 0.0f, 1.0f, 0.0f);  // Rotate 90 degrees around the Y-axis 
@@ -162,7 +162,11 @@ void drawSphere() {
     float radius = (1.0f * scale) / sqrt(3);
     //radius = radius * 2.0f;
     int subdivision = 5;
+    float final_radius = radius; 
     for (int i = 0; i < 6; ++i) {
+
+        if (i == 4) continue;
+        
         glPushMatrix();
         glTranslatef(vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2]);
         glColor3f(1, 1, 0);
@@ -197,35 +201,67 @@ void drawSphere() {
             //  vertices[i] = vertices[i] * radius;
         }
         int pointsPerRow = (int)pow(2, subdivision) + 1;
-        for (unsigned int i = 0; i < pointsPerRow - 1; ++i)
-        {
-            glBegin(GL_TRIANGLE_STRIP);
-            for (unsigned int j = 0; j < pointsPerRow; ++j)
+        if (i != 1) {
+            for (unsigned int i = 0; i < pointsPerRow / 2  - 1; ++i)
             {
-                // vertex 1
-                // yellow color
+                glBegin(GL_TRIANGLE_STRIP);
 
-                glNormal3f(vertices[3 * (i * pointsPerRow + j) + 0],
-                    vertices[3 * (i * pointsPerRow + j) + 1],
-                    vertices[3 * (i * pointsPerRow + j) + 2]);
-                glVertex3f(vertices[3 * (i * pointsPerRow + j) + 0] * radius,
-                    vertices[3 * (i * pointsPerRow + j) + 1] * radius,
-                    vertices[3 * (i * pointsPerRow + j) + 2] * radius);
+                for (unsigned int j = 0; j < pointsPerRow; ++j)
+                {
+                    // vertex 1
+                    // yellow color
 
-                // vertex 2
-                glNormal3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0],
-                    vertices[3 * ((i + 1) * pointsPerRow + j) + 1],
-                    vertices[3 * ((i + 1) * pointsPerRow + j) + 2]);
-                glVertex3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0] * radius,
-                    vertices[3 * ((i + 1) * pointsPerRow + j) + 1] * radius,
-                    vertices[3 * ((i + 1) * pointsPerRow + j) + 2] * radius);
+                    glNormal3f(vertices[3 * (i * pointsPerRow + j) + 0],
+                        vertices[3 * (i * pointsPerRow + j) + 1],
+                        vertices[3 * (i * pointsPerRow + j) + 2]);
+                    glVertex3f(vertices[3 * (i * pointsPerRow + j) + 0] * radius,
+                        vertices[3 * (i * pointsPerRow + j) + 1] * radius,
+                        vertices[3 * (i * pointsPerRow + j) + 2] * radius);
+
+                    // vertex 2
+                    glNormal3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0],
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 1],
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 2]);
+                    glVertex3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0] * radius,
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 1] * radius,
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 2] * radius);
+                }
+                glEnd();
             }
-            glEnd();
+        }
+        else {
+            for (unsigned int i = 0; i < pointsPerRow - 1; ++i)
+            {
+                glBegin(GL_TRIANGLE_STRIP);
+
+                for (unsigned int j = 0; j < pointsPerRow; ++j)
+                {
+                    // vertex 1
+                    // yellow color
+
+                    glNormal3f(vertices[3 * (i * pointsPerRow + j) + 0],
+                        vertices[3 * (i * pointsPerRow + j) + 1],
+                        vertices[3 * (i * pointsPerRow + j) + 2]);
+                    glVertex3f(vertices[3 * (i * pointsPerRow + j) + 0] * radius,
+                        vertices[3 * (i * pointsPerRow + j) + 1] * radius,
+                        vertices[3 * (i * pointsPerRow + j) + 2] * radius);
+
+                    // vertex 2
+                    glNormal3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0],
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 1],
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 2]);
+                    glVertex3f(vertices[3 * ((i + 1) * pointsPerRow + j) + 0] * radius,
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 1] * radius,
+                        vertices[3 * ((i + 1) * pointsPerRow + j) + 2] * radius);
+                }
+                glEnd();
+            }
         }
         glPopMatrix();
     }
 
 }
+
 
 void drawCylinder() {
 
@@ -243,8 +279,12 @@ void drawCylinder() {
     int segments = 50;
     double tempx = radius, tempy = 0;
     double currx, curry;
+    float actual_radius = radius;
     for (int i = 0; i < 12; ++i) {
         glPushMatrix();
+        if (i >= 4 and i <= 7) continue;
+        if (i >= 8 and i <= 12) radius = actual_radius / 2;
+        if (i == 8) height += 0.1f;
         glTranslatef((1 - scale) * 0.5f, (1 - scale) * 0.5f, 0);
         // here begins the transloation 
         if (i == 1) {
@@ -311,13 +351,15 @@ void drawCylinder() {
             glRotatef(45, 0, 1, 0);
             glRotatef(-45, 1, 0, 0);
         }
+
         glBegin(GL_QUADS);
         for (int i = 1; i <= segments; i++) {
-            double theta = i * 2.0 * M_PI / segments;
+            double theta = i * 2 * M_PI / segments;
             currx = radius * cos(theta);
             curry = radius * sin(theta);
 
             GLfloat c = (2 + cos(theta)) / 3;
+            c = 1;
             glColor3f(c, c, c);
             glVertex3f(currx, curry, height / 2);
             glVertex3f(currx, curry, -height / 2);
@@ -329,6 +371,7 @@ void drawCylinder() {
             tempy = curry;
         }
         glEnd();
+
         glPopMatrix();
     }
 }
@@ -345,8 +388,8 @@ void display() {
     glMatrixMode(GL_MODELVIEW);             // To operate on Model-View matrix
     glLoadIdentity();                       // Reset the model-view matrix
 
-    
-    
+
+
 
     // control viewing (or camera)
     gluLookAt(pos.x, pos.y, pos.z,
@@ -429,7 +472,7 @@ void clockWise() {
     // r.y = 0;
     // r.z = 0.7;
 
-    
+
 
 
 
@@ -542,7 +585,7 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         //rotate the camera clockwise
         rotationAngle += 10;
         //clockWise();
-       
+
 
         break;
     case 'd':
@@ -562,7 +605,7 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         if (scale < 0.0f)
             scale = 0.0f;
         break;
-    
+
     default:
         break;
     }

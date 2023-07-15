@@ -141,6 +141,7 @@ void drawPendulum() {
 
     glFlush();
 }
+
 // void drawPendulum() {
 //     // Draw pendulum arm
 //     glColor3f(0.0f, 0.0f, 0.0f);
@@ -235,7 +236,7 @@ void reshape(int width, int height) {
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(800, 800);
+    glutInitWindowSize(600, 800);
     glutCreateWindow("Clock and Pendulum");
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
