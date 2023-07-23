@@ -86,29 +86,35 @@ void readFile(string fileName) {
     ofstream output_file;
     output_file.open("stage1.txt");
 
-    while (getline(file, line)) {
-        /*
-        Line 1: eyeX eyeY eyeZ
-        Line 2: lookX lookY lookZ
-        Line 3: upX upY upZ
-        Line 4: fovY aspectRatio near far
-        */
-        stringstream ss(line);
-        ss >> eyex >> eyey >> eyez;
-        getline(file, line);
-        ss.clear();
-        ss.str(line);
-        ss >> lookx >> looky >> lookz;
-        getline(file, line);
-        ss.clear();
-        ss.str(line);
-        ss >> upx >> upy >> upz;
-        getline(file, line);
-        ss.clear();
-        ss.str(line);
-        ss >> fovy >> aspectratio >> znear >> zfar;
+
+    /*
+    Line 1: eyeX eyeY eyeZ
+    Line 2: lookX lookY lookZ
+    Line 3: upX upY upZ
+    Line 4: fovY aspectRatio near far
+    */
+
+    getline(file, line);
+    stringstream ss(line);
+    cout << line << endl;
+    ss >> eyex >> eyey >> eyez;
+    cout << eyex << " " << eyey << " " << eyez << endl;
+    getline(file, line);
+    ss.clear();
+    ss.str(line);
+    ss >> lookx >> looky >> lookz;
+    getline(file, line);
+    ss.clear();
+    ss.str(line);
+    ss >> upx >> upy >> upz;
+    getline(file, line);
+    ss.clear();
+    ss.str(line);
+    ss >> fovy >> aspectratio >> znear >> zfar;
 
 
+
+    while (true) {
         // here begins stage 1 : 
 
         // read command 
@@ -128,6 +134,7 @@ void readFile(string fileName) {
                 points[i][3] = 1;
             }
 
+
             // apply transformation matrix M to each point from points 
             for (int i = 0; i < 3; i++) {
                 Matrix P(4, 1);
@@ -144,8 +151,12 @@ void readFile(string fileName) {
             // output the transformed points to output_file
 
             for (int i = 0; i < 3; i++) {
-                output_file << points[i][0] << " " << points[i][1] << " " << points[i][2] << endl;
+                cout << points[i][0] << " " << points[i][1] << " " << points[i][2] << endl;
+
+                output_file << fixed << setprecision(7) << points[i][0] << " " << points[i][1] << " " << points[i][2] << endl;
             }
+            output_file << endl;
+            cout << "triangle done" << endl;
 
         }
         else if (command == "translate") {
@@ -174,6 +185,7 @@ void readFile(string fileName) {
             ss.clear();
             ss.str(line);
             ss >> sx >> sy >> sz;
+            cout << command << " " << sx << " " << sy << " " << sz << endl;
             // create scaling matrix
             Matrix S(4, 4);
             S.mat[0][0] = sx;
@@ -212,9 +224,11 @@ void readFile(string fileName) {
             M = M * R;
         }
         else if (command == "push") {
+            cout << "push is done" << endl;
             S.push(M);
         }
         else if (command == "pop") {
+            cout << "pop is done" << endl;
             M = S.top();
             S.pop();
         }
@@ -222,6 +236,7 @@ void readFile(string fileName) {
             break;
         }
         else {
+            cout << command << endl;
             cout << "Invalid command" << endl;
         }
     }
@@ -232,8 +247,21 @@ void readFile(string fileName) {
 
 
 void stage2() {
+
+    cout << "Stage 2" << endl;
+    cout << "------" << endl << endl;
     // in this stage, we will read the scene from stage1.txt and apply the view transformation
     // and then output the transformed scene to stage2.txt
+    /*
+
+    Line 1: eyeX eyeY eyeZ
+    Line 2: lookX lookY lookZ
+    Line 3: upX upY upZ
+    Line 4: fovY aspectRatio near far
+
+    */
+
+
 
     ifstream file;
     file.open("stage1.txt");
@@ -255,6 +283,8 @@ void stage2() {
     double ly = looky - eyey;
     double lz = lookz - eyez;
     double l = sqrt(lx * lx + ly * ly + lz * lz);
+    cout << "lx " << lx << " ly " << ly << " lz " << lz << " l " << l << endl;
+    cout << "l: " << l << endl;
     lx /= l;
     ly /= l;
     lz /= l;
@@ -263,6 +293,7 @@ void stage2() {
     double ry = lz * upx - lx * upz;
     double rz = lx * upy - ly * upx;
     double r = sqrt(rx * rx + ry * ry + rz * rz);
+    cout << "r: " << r << endl;
     rx /= r;
     ry /= r;
     rz /= r;
@@ -271,6 +302,7 @@ void stage2() {
     double uy = rz * lx - rx * lz;
     double uz = rx * ly - ry * lx;
     double u = sqrt(ux * ux + uy * uy + uz * uz);
+    cout << " u: " << u << endl;
     ux /= u;
     uy /= u;
     uz /= u;
@@ -289,9 +321,13 @@ void stage2() {
     V.mat[2][2] = -lz;
     V.mat[2][3] = lx * eyex + ly * eyey + lz * eyez;
     V.mat[3][3] = 1;
-
+    V.print();
     // now read the points from stage1.txt and apply the view transformation
     while (getline(file, line)) {
+        if (line.size() == 0) {
+            output_file << endl;
+            continue;
+        }
         ss.clear();
         ss.str(line);
         double x, y, z;
@@ -305,7 +341,8 @@ void stage2() {
         // multiply V with P
         Matrix R = V * P;
         // write the transformed point in stage2.txt
-        output_file << R.mat[0][0] << " " << R.mat[1][0] << " " << R.mat[2][0] << endl;
+        output_file << fixed << setprecision(7) << R.mat[0][0] << " " << R.mat[1][0] << " " << R.mat[2][0] << endl;
+
     }
     // close the files
     file.close();
@@ -314,6 +351,9 @@ void stage2() {
 }
 
 void stage3() {
+    cout << "Stage 3" << endl;
+    cout << "------" << endl << endl;
+
     //fovy, aspectratio, znear, zfar;
     // read data from stage2.txt and apply the projection transformation and output the transformed scene to stage3.txt 
     ifstream file;
@@ -324,10 +364,12 @@ void stage3() {
 
     //First compute the field of view along X (fovX) axis and determine rand t. 
     double fovx = fovy * aspectratio;
-    double t = znear * tan(degree_to_radian(fovy / 2));
-    double r = znear * tan(degree_to_radian(fovx / 2));
+    double t = znear * tan(degree_to_radian(fovy / 2.0f));
+    double r = znear * tan(degree_to_radian(fovx / 2.0f));
+    cout << "t: " << t << " r: " << r << endl;
     //Then compute the projection matrix P using the parameters t, r, znear, zfar.
     Matrix P(4, 4);
+    cout << fovy << " " << aspectratio << " " << znear << " " << zfar << endl;
     P.mat[0][0] = znear / r;
     P.mat[1][1] = znear / t;
     P.mat[2][2] = -(zfar + znear) / (zfar - znear);
@@ -337,20 +379,24 @@ void stage3() {
     string line;
     stringstream ss;
     while (getline(file, line)) {
+        if (line.size() == 0) {
+            output_file << endl;
+            continue;
+        }
         ss.clear();
         ss.str(line);
         double x, y, z;
         ss >> x >> y >> z;
         // create point matrix
-        Matrix P(4, 1);
-        P.mat[0][0] = x;
-        P.mat[1][0] = y;
-        P.mat[2][0] = z;
-        P.mat[3][0] = 1;
+        Matrix Q(4, 1);
+        Q.mat[0][0] = x;
+        Q.mat[1][0] = y;
+        Q.mat[2][0] = z;
+        Q.mat[3][0] = 1;
         // multiply P with P
-        Matrix R = P * P;
+        Matrix R = P * Q;
         // write the transformed point in stage3.txt
-        output_file << R.mat[0][0] << " " << R.mat[1][0] << " " << R.mat[2][0] << endl;
+        output_file << fixed << setprecision(7) << R.mat[0][0] / R.mat[3][0] << " " << R.mat[1][0] / R.mat[3][0] << " " << R.mat[2][0] / R.mat[3][0] << endl;
     }
     // close the files
     file.close();
@@ -360,4 +406,6 @@ void stage3() {
 
 int32_t main() {
     readFile("scene.txt");
+    stage2();
+    stage3();
 }
