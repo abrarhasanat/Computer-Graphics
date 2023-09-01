@@ -400,9 +400,9 @@ void display() {
     //drawCone(10, 5, 10);
     glPushMatrix();
     glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
-    drawOctahedron();
-    drawAxes();
-    drawCylinder();
+    // drawOctahedron();
+    // drawAxes();
+    // drawCylinder();
     drawSphere();
     glPopMatrix();
     glutSwapBuffers();  // Render now

@@ -357,10 +357,17 @@ void display() {
     //drawCone(10, 5, 10);
     glPushMatrix();
     glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+
+    // your draw fucntions goes here 
+
+
     drawOctahedron();
     drawAxes();
     drawCylinder();
     drawSphere();
+
+
+
     glPopMatrix();
     glutSwapBuffers();  // Render now
 }
@@ -625,8 +632,10 @@ void specialKeyListener(int key, int x, int y)
 
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
-    pos.x = 3;pos.y = 3; pos.z = 3;
 
+
+
+    pos.x = 3;pos.y = 3; pos.z = 3;
     l.x = -1;l.y = -1;l.z = -1;
     u.x = 0;u.y = 1;u.z = 0;
     r.x = 0.707;r.y = 0;r.z = -0.707;
