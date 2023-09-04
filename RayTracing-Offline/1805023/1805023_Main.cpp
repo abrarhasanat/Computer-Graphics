@@ -734,11 +734,28 @@ void loadTexture() {
     // load the "texture_w.bmp" file  using bitmap.h/.cpp\ 
 
 
-    bitmap_image image_w("texture_w.bmp");
+    bitmap_image image_z("texture_w.bmp");
 
-    if (!image_w) {
+    if (!image_z) {
         isWLoaded = false;
         return;
+    }
+    int mndim = 256;
+    int wz = image_z.width();
+    int hz = image_z.height();
+    w_height = mndim;
+    w_width = mndim;
+    bitmap_image image_w(mndim, mndim);
+    for (int i = 0; i < w_width; i++) {
+        for (int j = 0; j < w_height; j++) {
+            rgb_t color;
+            double x = (double)i / (double)w_width;
+            double y = (double)j / (double)w_height;
+            x *= (double)wz;
+            y *= (double)hz;
+            image_z.get_pixel(x, y, color);
+            image_w.set_pixel(j, i, color.red, color.green, color.blue);
+        }
     }
 
 
