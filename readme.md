@@ -1,4 +1,4 @@
-# offline - 2 magic_cube and clock
+# offline -  magic_cube and clock
 
 .
 
