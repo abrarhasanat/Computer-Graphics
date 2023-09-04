@@ -1,5 +1,5 @@
 #include<bits/stdc++.h> 
-#include "bitmap_image.hpp"
+#include "1805023_bitmap_image.hpp"
 #include <GL/glut.h>
 #define pi acos(-1)
 using namespace std;
@@ -206,6 +206,7 @@ class CheckerBoard;
 
 Color w_buff[1000][1000];
 Color b_buff[1000][1000];
+double  w_width, w_height, b_width, b_height;
 vector<Object*> objects;
 vector<Pyramid*> pyramids;
 vector<Cube*> cubes;
@@ -216,7 +217,7 @@ public:
 
     Point ref_point;
     Color color;
-    double ambient, diffuse, specular, reflection, shininess;
+    double ambient, diffuse, specular, reflection, shininess, widthOfEachCell;
     bool isCheckerBoard = false;
     Object() {}
 
@@ -230,8 +231,43 @@ public:
     virtual Color getColor(Point p) {
         return color;
     }
-    virtual void read() {}
+    Point getLowerLeftCorner(Point p) {
+        int x = (p.x - ref_point.x) / widthOfEachCell;
+        int y = (p.y - ref_point.y) / widthOfEachCell;
+        return Point(ref_point.x + x * widthOfEachCell, ref_point.y + y * widthOfEachCell, 0);
 
+    }
+    virtual void read() {}
+    bool isWhite(Point intersectionPoint) {
+        int xx = (intersectionPoint.x - ref_point.x) / widthOfEachCell;
+        int yy = (intersectionPoint.y - ref_point.y) / widthOfEachCell;
+        if ((xx + yy) % 2 == 0) {
+            // white cell  
+            return true;
+        }
+        else {
+            return false;
+            // black cell
+        }
+    }
+
+    pair<int, int> getXYForTexture(Point p, int isW) {
+        Point lowerLeftPont = getLowerLeftCorner(p);
+        double width = w_width;
+        double height = w_height;
+        if (!isW) {
+            width = b_width;
+            height = b_height;
+        }
+        double dx = p.x - lowerLeftPont.x;
+        double dy = p.y - lowerLeftPont.y;
+        if (dx < 0 or dy < 0) return make_pair(-1, -1);
+        dx /= widthOfEachCell;
+        dy /= widthOfEachCell;
+        int x = dx * width;
+        int y = dy * height;
+        return make_pair(x, y);
+    }
     virtual double Illuminate(Ray ray, Color& color, int level) {
         double result = this->intersect(ray, color, level);
         if (result < 0) return -1;
@@ -239,9 +275,51 @@ public:
 
         Point intersectingPoint = ray.origin + ray.dir * result;
         Color colorAtIintersectingPoint = this->getColor(intersectingPoint);
-        color.r = colorAtIintersectingPoint.r * ambient;
-        color.g = colorAtIintersectingPoint.g * ambient;
-        color.b = colorAtIintersectingPoint.b * ambient;
+        if (isTextureEnabled) {
+            if (!isCheckerBoard) {
+                color.r = colorAtIintersectingPoint.r * ambient;
+                color.g = colorAtIintersectingPoint.g * ambient;
+                color.b = colorAtIintersectingPoint.b * ambient;
+            }
+            else {
+                if (isWhite(intersectingPoint)) {
+                    pair<int, int> xy = getXYForTexture(intersectingPoint, 1);
+                    if (xy.first != -1 and xy.second != -1) {
+                        color.r = w_buff[xy.first][xy.second].r * ambient * colorAtIintersectingPoint.r;
+                        color.g = w_buff[xy.first][xy.second].g * ambient * colorAtIintersectingPoint.g;
+                        color.b = w_buff[xy.first][xy.second].b * ambient * colorAtIintersectingPoint.b;
+                    }
+                    else {
+                        color.r = colorAtIintersectingPoint.r * ambient;
+                        color.g = colorAtIintersectingPoint.g * ambient;
+                        color.b = colorAtIintersectingPoint.b * ambient;
+
+                    }
+                }
+                else {
+                    pair<int, int>xy = getXYForTexture(intersectingPoint, 0);
+                    if (xy.first != -1 and xy.second != -1) {
+                        color.r = b_buff[xy.first][xy.second].r * ambient;
+                        color.g = b_buff[xy.first][xy.second].g * ambient;
+                        color.b = b_buff[xy.first][xy.second].b * ambient;
+                    }
+                    else {
+                        color.r = colorAtIintersectingPoint.r * ambient;
+                        color.g = colorAtIintersectingPoint.g * ambient;
+                        color.b = colorAtIintersectingPoint.b * ambient;
+                    }
+                }
+            }
+        }
+        else {
+            color.r = colorAtIintersectingPoint.r * ambient;
+            color.g = colorAtIintersectingPoint.g * ambient;
+            color.b = colorAtIintersectingPoint.b * ambient;
+        }
+
+
+
+
         double lambert = 0;
         double phong = 0;
         for (int i = 0; i < lights.size(); i++) {
@@ -340,10 +418,50 @@ phong += pow( R’.dot(toSource), shininess)*scaling_factor
         if (phong > 0) nonZeroPhong++;
         else zeroPhong++;
 
+        if (isTextureEnabled) {
+            if (!isCheckerBoard) {
+                color.r += lambert * diffuse * colorAtIintersectingPoint.r;
+                color.g += lambert * diffuse * colorAtIintersectingPoint.g;
+                color.b += lambert * diffuse * colorAtIintersectingPoint.b;
+            }
+            else {
+                if (isWhite(intersectingPoint)) {
 
-        color.r += lambert * diffuse * colorAtIintersectingPoint.r;
-        color.g += lambert * diffuse * colorAtIintersectingPoint.g;
-        color.b += lambert * diffuse * colorAtIintersectingPoint.b;
+                    pair<int, int>xy = getXYForTexture(intersectingPoint, 1);
+                    if (xy.first != -1 and xy.second != -1) {
+                        color.r += lambert * diffuse * w_buff[xy.first][xy.second].r * colorAtIintersectingPoint.r;
+                        color.g += lambert * diffuse * w_buff[xy.first][xy.second].g * colorAtIintersectingPoint.g;
+                        color.b += lambert * diffuse * w_buff[xy.first][xy.second].b * colorAtIintersectingPoint.b;
+                    }
+                    else {
+                        color.r += lambert * diffuse * colorAtIintersectingPoint.r;
+                        color.g += lambert * diffuse * colorAtIintersectingPoint.g;
+                        color.b += lambert * diffuse * colorAtIintersectingPoint.b;
+                    }
+                }
+                else {
+                    pair<int, int>xy = getXYForTexture(intersectingPoint, 0);
+                    if (xy.first != -1 and xy.second != -1) {
+
+                        color.r += lambert * diffuse * b_buff[xy.first][xy.second].r;
+                        color.g += lambert * diffuse * b_buff[xy.first][xy.second].g;
+                        color.b += lambert * diffuse * b_buff[xy.first][xy.second].b;
+                    }
+                    else {
+                        color.r += lambert * diffuse * colorAtIintersectingPoint.r;
+                        color.g += lambert * diffuse * colorAtIintersectingPoint.g;
+                        color.b += lambert * diffuse * colorAtIintersectingPoint.b;
+                    }
+                }
+            }
+        }
+        else {
+            color.r += lambert * diffuse * colorAtIintersectingPoint.r;
+            color.g += lambert * diffuse * colorAtIintersectingPoint.g;
+            color.b += lambert * diffuse * colorAtIintersectingPoint.b;
+        }
+
+
         color.r += phong * specular * 1.0f;
         color.g += phong * specular * 1.0f;
         color.b += phong * specular * 1.0f;
@@ -508,12 +626,14 @@ public:
 
 class CheckerBoard : public Object {
 public:
-    int widthOfEachCell;
+
     CheckerBoard() {}
-    CheckerBoard(int _widthOfEachCell) : widthOfEachCell(_widthOfEachCell) {
+    CheckerBoard(int _widthOfEachCell) {
+        this->widthOfEachCell = _widthOfEachCell;
         ref_point = Point(-250, -250, 0); // bottom left corner of the checkerboard
     }
-    CheckerBoard(int _checkerBoard, double ambientForCheckerBoard, double diffuseForCheckerBoard, double reflectionForCheckerBoard) : widthOfEachCell(_checkerBoard) {
+    CheckerBoard(int _checkerBoard, double ambientForCheckerBoard, double diffuseForCheckerBoard, double reflectionForCheckerBoard) {
+        this->widthOfEachCell = _checkerBoard;
         this->color = Color(0, 0, 0);
         this->ambient = ambientForCheckerBoard;
         this->diffuse = diffuseForCheckerBoard;
@@ -522,7 +642,8 @@ public:
         this->shininess = 0;
         ref_point = Point(-250, -250, 0); // bottom left corner of the checkerboard
     }
-    CheckerBoard(int _widthOfEachCell, Color color, double ambient, double diffuse, double specular, double reflection, double shininess) : widthOfEachCell(_widthOfEachCell) {
+    CheckerBoard(int _widthOfEachCell, Color color, double ambient, double diffuse, double specular, double reflection, double shininess) {
+        this->widthOfEachCell = _widthOfEachCell;
         this->color = color;
         this->ambient = ambient;
         this->diffuse = diffuse;
@@ -574,12 +695,7 @@ public:
         }
     }
 
-    Point getLowerLeftCorner(Point p) {
-        int x = (p.x - ref_point.x) / widthOfEachCell;
-        int y = (p.y - ref_point.y) / widthOfEachCell;
-        return Point(ref_point.x + x * widthOfEachCell, ref_point.y + y * widthOfEachCell, 0);
 
-    }
 };
 
 class Pyramid : public Object {

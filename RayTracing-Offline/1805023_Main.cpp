@@ -6,7 +6,7 @@
 using namespace std;
 
 #include "1805023_classes.cpp" 
-#include "bitmap_image.hpp"
+#include "1805023_bitmap_image.hpp"
 
 #define pi acos(-1)
 
@@ -725,11 +725,12 @@ void display() {
 
 double windowWidth = 740, windowHeight = 740;
 double viewAngle = 80;
-int w_width, w_height, b_width, b_height;
 bool isWLoaded = false, isBLoaded = false;
 void loadTexture() {
+    cout << "inside load texture" << endl;
+    // load the "texture_w.bmp" file  using bitmap.h/.cpp\ 
 
-    // load the "texture_w.bmp" file  using bitmap.h/.cpp
+
     bitmap_image image_w("texture_w.bmp");
 
     if (!image_w) {
@@ -737,19 +738,21 @@ void loadTexture() {
         return;
     }
 
-    w_height = image.height();
-    w_width = image.width();
 
+
+    w_height = image_w.height();
+    w_width = image_w.width();
+    cout << " w_height " << w_height << " w_width " << w_width << endl;
+    w_width -= 10;
+    w_height -= 10;
     for (std::size_t y = 0; y < w_height; ++y) {
         for (std::size_t x = 0; x < w_width; ++x) {
-            Color color(0, 0, 0);
-            unsigned char r, g, b;
-            image.get_pixel(x, y, r, g, b);
-            w_buff[x][y] = Color(r, g, b);
+            rgb_t color;
+            image_w.get_pixel(x, y, color);
+            w_buff[x][y] = Color(color.red, color.green, color.blue);
             w_buff[x][y].r /= 255.0;
             w_buff[x][y].g /= 255.0;
             w_buff[x][y].b /= 255.0;
-
         }
     }
 
@@ -758,15 +761,17 @@ void loadTexture() {
         isBLoaded = false;
         return;
     }
-    b_height = image.height();
-    b_width = image.width();
+    b_height = image_b.height();
+    b_width = image_b.width();
 
+    b_width -= 10;
+    b_height -= 10;
+    cout << " b_height " << b_height << " b_width " << b_width << endl;
     for (std::size_t y = 0; y < b_height; ++y) {
         for (std::size_t x = 0; x < w_width; ++x) {
-            unsigned char r, g, b;
-
-            image.get_pixel(x, y, r, g, b);
-            b_buff[x][y] = Color(r, g, b);
+            rgb_t color;
+            image_b.get_pixel(x, y, color);
+            b_buff[x][y] = Color(color.red, color.green, color.blue);
             b_buff[x][y].r /= 255.0;
             b_buff[x][y].g /= 255.0;
             b_buff[x][y].b /= 255.0;
@@ -791,69 +796,42 @@ void generateImage() {
         for (int j = 0;j < imageHeight;j++)
             image.set_pixel(i, j, 0, 0, 0);
 
-    // image.save_image("black.bmp");
-
     double planeDistance = (windowHeight / 2.0) / tan((pi * 80) / (360.0));
-
     Point topLeft = pos + (l * planeDistance) + (u * (windowHeight / 2.0)) - (r * (windowWidth / 2.0));
-
     double du = windowWidth / (imageWidth * 1.0);
     double dv = windowHeight / (imageHeight * 1.0);
-
-    // Choose middle of the grid cell
     topLeft = topLeft + (r * du / 2.0) - (u * dv / 2.0);
-
-    int nearestObjectIndex = -1;
-    double t, tMin;
+    int nearest = -1;
+    ;
     vector <pair<pair<int, int>, Color>> pixels;
     for (int i = 0;i < imageWidth;i++) {
         for (int j = 0;j < imageHeight;j++) {
 
             Point pixel = topLeft + (r * du * i) - (u * dv * j);
             Ray ray(pos, pixel - pos);
-            Color color;
-            tMin = -1;
-            nearestObjectIndex = -1;
+            Color color; // = Color(0, 0, 0);
+            double tMin = -1;
+            nearest = -1;
             for (int k = 0;k < (int)objects.size();k++) {
-                t = objects[k]->intersect(ray, color, 0);
-                if (t > 0 && (nearestObjectIndex == -1 || t < tMin))
-                    tMin = t, nearestObjectIndex = k;
+                double t = objects[k]->intersect(ray, color, 0);
+
+                if (t < tMin || nearest == -1) {
+                    if (t > 0) {
+                        tMin = t;
+                        nearest = k;
+                    }
+                }
             }
-            if (nearestObjectIndex != -1) {
+            if (nearest != -1) {
                 color = Color(0, 0, 0);
-                double t = objects[nearestObjectIndex]->Illuminate(ray, color, levelOfRecursion);
 
-                if (color.r > 1) color.r = 1;
-                if (color.g > 1) color.g = 1;
-                if (color.b > 1) color.b = 1;
-
-                if (color.r < 0) color.r = 0;
-                if (color.g < 0) color.g = 0;
-                if (color.b < 0) color.b = 0;
+                double t = objects[nearest]->Illuminate(ray, color, levelOfRecursion);
 
 
-                // if (k + 1 == (int)objects.size()) { // that means it is the checkerboard 
-                //      // get the intersection point 
-                //     Point intersectionPoint = ray.origin + ray.direction * t;
-                //     // get the color of the intersection point
-                //     int xx = (intersectionPoint.x - objects[k]->ref_point.x) / widthOfEachCell;
-                //     int yy = (intersectionPoint.y - objects[k]->ref_point.y) / widthOfEachCell;
-                //     if ((xx + yy) % 2 == 0) {
-                //         // white cell  
-                //         Point lowerLeftPont = objects[k]->getLowerLeftPoint(intersectionPoint);
-                //         double dx = intersectionPoint.x - lowerLeftPont.x;
-                //         double dy = intersectionPoint.y - lowerLeftPont.y;
-                //         dx /= widthOfEachCell;
-                //         dy /= widthOfEachCell;
-                //         int x = dx * w_width;
-                //         int y = dy * w_height;
 
-
-                //     }
-                //     else {
-                //         // black cell
-                //     }
-
+                color.r = max(0.0, min(1.0, color.r));
+                color.g = max(0.0, min(1.0, color.g));
+                color.b = max(0.0, min(1.0, color.b));
 
 
 
@@ -869,10 +847,11 @@ void generateImage() {
 
     cout << zeroLambert << " " << nonZeroLambert << endl;
     cout << zeroPhong << " " << nonZeroPhong << endl;
-
-    image.save_image("test.bmp");
-    for (int i = 0; i < objects.size(); ++i) {
-        cout << objects[i]->shininess << endl;
+    if (!isTextureEnabled) {
+        image.save_image("1805023.bmp");
+    }
+    else {
+        image.save_image("1805023_texture.bmp");
     }
     cout << "Image Generated" << endl;
 }
@@ -1079,6 +1058,16 @@ void keyboardListener(unsigned char key, int xx, int yy) {
         generateImage();
         break;
 
+    case ' ':
+        isTextureEnabled = !isTextureEnabled;
+        if (isTextureEnabled) {
+            cout << "Texture is enabled" << endl;
+        }
+        else {
+            cout << "Texture is disabled" << endl;
+        }
+        break;
+
     default:
         break;
     }
@@ -1145,6 +1134,7 @@ int main(int argc, char** argv) {
 
     readInputFile();
     cout << "file is read" << endl;
+    loadTexture();
     pos.x = 0;pos.y = -150; pos.z = 60;
     l.x = 0;l.y = 1;l.z = 0;
     //determine the rand u vector from given posand l
