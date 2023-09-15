@@ -852,7 +852,6 @@ void generateImage() {
     vector <pair<pair<int, int>, Color>> pixels;
     for (int i = 0;i < imageWidth;i++) {
         for (int j = 0;j < imageHeight;j++) {
-
             Point pixel = topLeft + (r * du * i) - (u * dv * j);
             Ray ray(pos, pixel - pos);
             Color color; // = Color(0, 0, 0);
@@ -860,7 +859,6 @@ void generateImage() {
             nearest = -1;
             for (int k = 0;k < (int)objects.size();k++) {
                 double t = objects[k]->intersect(ray, color, 0);
-
                 if (t < tMin || nearest == -1) {
                     if (t > 0) {
                         tMin = t;
@@ -870,16 +868,10 @@ void generateImage() {
             }
             if (nearest != -1) {
                 color = Color(0, 0, 0);
-
                 double t = objects[nearest]->Illuminate(ray, color, levelOfRecursion);
-
-
-
                 color.r = max(0.0, min(1.0, color.r));
                 color.g = max(0.0, min(1.0, color.g));
                 color.b = max(0.0, min(1.0, color.b));
-
-
 
                 // }
                 image.set_pixel(i, j, color.r * 255, color.g * 255, color.b * 255);
