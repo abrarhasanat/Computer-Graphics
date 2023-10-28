@@ -1,3 +1,4 @@
+# This Readme is AI generated
 # offline -  magic_cube and clock
 
 .
